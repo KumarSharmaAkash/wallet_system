@@ -146,6 +146,12 @@ Flagged transactions are logged (mocked, no real ML).
 
 ---
 
+## 🔗 API Documentation
+
+📘 Access the full public Postman documentation here:  
+[Digital Wallet API Docs](https://documenter.getpostman.com/view/45213642/2sB2qaigcL)
+
+
 ## 👨‍💻 Author
 
 Made with ❤️ by Akash
