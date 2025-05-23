@@ -25,8 +25,6 @@ A backend RESTful API built with **Node.js, Express, and MongoDB** that supports
 
 ```
 digital-wallet/
-├── components/
-│   └── dailyFraudScan.js  
 ├── controllers/         # Route logic
 ├── middleware/          # JWT auth
 ├── models/              # MongoDB schemas
