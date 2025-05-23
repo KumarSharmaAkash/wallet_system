@@ -92,8 +92,6 @@ export const withdraw = async (req, res) => {
     res.status(500).json({ message: 'Withdrawal failed', error: error.message });
   }
 };
-
-// POST /api/wallet/transfer
 export const transfer = async (req, res) => {
   const { email, amount, currency = 'INR' } = req.body;
 
@@ -116,6 +114,8 @@ export const transfer = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
+    let txn; // declare outside so it's accessible after commit
+
     try {
       sender.balances.set(currency, senderBalance - amount);
       const receiverBalance = receiver.balances.get(currency) || 0;
@@ -124,7 +124,7 @@ export const transfer = async (req, res) => {
       await sender.save({ session });
       await receiver.save({ session });
 
-      const [txn] = await Transaction.create([{
+      [txn] = await Transaction.create([{
         sender: sender._id,
         receiver: receiver._id,
         amount,
@@ -135,16 +135,17 @@ export const transfer = async (req, res) => {
 
       await session.commitTransaction();
       session.endSession();
-
-      await checkFraudRules({ user: sender, transaction: txn, type: 'transfer' });
-
-      res.status(200).json({ message: 'Transfer successful' });
     } catch (innerErr) {
       await session.abortTransaction();
       session.endSession();
       console.error('Transfer Transaction Failed:', innerErr.message);
-      res.status(500).json({ message: 'Transfer failed. Rolled back.' });
+      return res.status(500).json({ message: 'Transfer failed. Rolled back.' });
     }
+
+    // ✅ call fraud check after transaction is committed
+    await runFraudCheck({ user: sender, transaction: txn, type: 'transfer' });
+
+    res.status(200).json({ message: 'Transfer successful' });
   } catch (err) {
     console.error('Transfer Error:', err.message);
     res.status(500).json({ message: 'Internal server error' });
